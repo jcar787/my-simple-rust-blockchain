@@ -4,6 +4,7 @@ use std::fmt::{ Formatter, Display };
 use chrono::{ Utc };
 use sha256::digest;
 
+#[derive(PartialEq)]
 pub enum Operation { START, BUY, SELL }
 
 impl Display for Operation {
@@ -85,7 +86,11 @@ impl Blockchain {
         }
     }
 
-    pub fn add_block(&mut self, block: Block) {
+    pub fn add_block(&mut self, block: Block) -> Result<bool, &'static str> {
+        if block.operation == Operation::START {
+            return Err("Blockchain can't be restarted. It's already started");
+        }
+
         let result = self.blocks.last();
         match result {
             Some(last_block) => {
@@ -94,9 +99,10 @@ impl Blockchain {
                     ..block
                 };
                 self.blocks.push(new_block);
+                Ok(true)
             },
             None => {
-                eprintln!("Blockchain wasn't initialized properly");
+                Err("Blockchain wasn't initialized properly")
             }
         }
     }
